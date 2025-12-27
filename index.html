@@ -4,66 +4,53 @@
 <meta charset="UTF-8">
 <title>SYSTEM // VOID</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Inter,system-ui,sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+body{background:#000;color:#d0d0d0;overflow:hidden;height:100vh}
 
-body{
-  background:#000;
-  color:#d8d8d8;
-  overflow:hidden;
-  height:100vh;
-}
-
-/* Canvas layers */
-canvas{
-  position:fixed;
-  inset:0;
-}
+canvas{position:fixed;inset:0}
 
 /* Film grain */
-#grain{
-  pointer-events:none;
-  opacity:.05;
-  mix-blend-mode:overlay;
-}
+#grain{pointer-events:none;opacity:.06;mix-blend-mode:overlay}
 
-/* Center text container */
-#overlay{
+/* Cursor */
+#cursor{
   position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width:14px;height:14px;
+  border-radius:50%;
+  background:#fff;
+  mix-blend-mode:difference;
   pointer-events:none;
+  transform:translate(-50%,-50%);
 }
 
+/* Text */
+#overlay{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
 #text{
   text-align:center;
-  font-size:14px;
-  letter-spacing:.15em;
+  font-size:13px;
+  letter-spacing:.2em;
   text-transform:uppercase;
   opacity:0;
   transition:opacity 3s ease;
 }
 
-/* Cursor entity */
-#cursor{
-  position:fixed;
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  background:#fff;
-  pointer-events:none;
-  mix-blend-mode:difference;
-  transform:translate(-50%,-50%);
+/* Glitch */
+.glitch{
+  animation:glitch .25s steps(2,end) infinite;
+}
+@keyframes glitch{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(-2px,1px)}
+  50%{transform:translate(2px,-1px)}
+  75%{transform:translate(-1px,2px)}
+  100%{transform:translate(0,0)}
 }
 </style>
 </head>
@@ -74,51 +61,43 @@ canvas{
 <canvas id="grain"></canvas>
 <div id="cursor"></div>
 
-<div id="overlay">
-  <div id="text"></div>
-</div>
+<div id="overlay"><div id="text"></div></div>
 
 <script>
 /* =========================
-   GLOBAL STATE
+   SYSTEM STATE
 ========================= */
-const STATE = {
+const SYSTEM = {
   time: 0,
   phase: 0,
-  interacted: false
+  interacted: false,
+  proximityHits: 0,
+  memory: sessionStorage.getItem("void_seen") ? true : false
 };
+sessionStorage.setItem("void_seen", "1");
 
 /* =========================
-   VOID CANVAS
+   VOID ENGINE
 ========================= */
-const canvas = document.getElementById("void");
-const ctx = canvas.getContext("2d");
+const c = document.getElementById("void");
+const ctx = c.getContext("2d");
 resize();
 
-let particles = [];
-for(let i=0;i<300;i++){
-  particles.push({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    z:Math.random(),
-    v:Math.random()*0.2+0.05
-  });
-}
+let stars = Array.from({length:400},()=>({
+  x:Math.random()*c.width,
+  y:Math.random()*c.height,
+  z:Math.random(),
+  v:Math.random()*0.25+0.05
+}));
 
 function drawVoid(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="#000";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  particles.forEach(p=>{
-    p.y += p.v * (1 + p.z*2);
-    if(p.y > canvas.height) p.y = 0;
-
-    const alpha = 0.2 + p.z*0.6;
-    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-    ctx.fillRect(p.x, p.y, 1+p.z, 1+p.z);
+  ctx.clearRect(0,0,c.width,c.height);
+  stars.forEach(s=>{
+    s.y+=s.v*(1+s.z*2);
+    if(s.y>c.height){s.y=0;s.x=Math.random()*c.width}
+    ctx.fillStyle=`rgba(255,255,255,${0.15+s.z*0.7})`;
+    ctx.fillRect(s.x,s.y,1+s.z,1+s.z);
   });
-
   requestAnimationFrame(drawVoid);
 }
 drawVoid();
@@ -126,91 +105,105 @@ drawVoid();
 /* =========================
    FILM GRAIN
 ========================= */
-const grain = document.getElementById("grain");
-const gctx = grain.getContext("2d");
+const g = document.getElementById("grain");
+const gctx = g.getContext("2d");
 resize();
-
-function drawGrain(){
-  const img = gctx.createImageData(grain.width, grain.height);
+(function grainLoop(){
+  const img = gctx.createImageData(g.width,g.height);
   for(let i=0;i<img.data.length;i+=4){
-    const v = Math.random()*255;
-    img.data[i] = v;
-    img.data[i+1] = v;
-    img.data[i+2] = v;
-    img.data[i+3] = 15;
+    const v=Math.random()*255;
+    img.data[i]=img.data[i+1]=img.data[i+2]=v;
+    img.data[i+3]=18;
   }
   gctx.putImageData(img,0,0);
-  requestAnimationFrame(drawGrain);
-}
-drawGrain();
+  requestAnimationFrame(grainLoop);
+})();
 
 /* =========================
    CURSOR ENTITY
 ========================= */
 const cursor = document.getElementById("cursor");
-let cx=0, cy=0, tx=0, ty=0;
+let cx=innerWidth/2, cy=innerHeight/2, tx=cx, ty=cy;
 
 window.addEventListener("mousemove",e=>{
-  tx=e.clientX;
-  ty=e.clientY;
-  STATE.interacted = true;
+  tx=e.clientX; ty=e.clientY;
+  SYSTEM.interacted=true;
 });
 
-function moveCursor(){
-  cx += (tx-cx)*0.08;
-  cy += (ty-cy)*0.08;
-  cursor.style.left = cx+"px";
-  cursor.style.top = cy+"px";
+(function moveCursor(){
+  cx+=(tx-cx)*0.06;
+  cy+=(ty-cy)*0.06;
+  cursor.style.left=cx+"px";
+  cursor.style.top=cy+"px";
   requestAnimationFrame(moveCursor);
-}
-moveCursor();
+})();
 
 /* =========================
-   TEXT SYSTEM
+   TEXT ENGINE
 ========================= */
 const text = document.getElementById("text");
 
-const SCRIPT = [
-  { t: 5,  msg: "INITIALIZING" },
-  { t: 12, msg: "SIGNAL DETECTED" },
-  { t: 20, msg: "OBSERVING" },
-  { t: 35, msg: "YOU ARE NOT REQUIRED TO INTERACT" },
-  { t: 55, msg: "BUT YOU WILL" }
-];
-
-let shown = -1;
-
-function updateText(){
-  STATE.time++;
-  const entry = SCRIPT.find((s,i)=> i>shown && STATE.time >= s.t);
-  if(entry){
-    text.textContent = entry.msg;
-    text.style.opacity = 1;
-    shown++;
-  }
+function say(msg, glitch=false){
+  text.textContent=msg;
+  text.style.opacity=1;
+  text.classList.toggle("glitch",glitch);
 }
 
 /* =========================
-   TIME ENGINE
+   PROXIMITY ZONES
+========================= */
+const zones = [
+  {x:0.25,y:0.3,r:120},
+  {x:0.7,y:0.6,r:140}
+];
+
+function checkZones(){
+  zones.forEach(z=>{
+    const zx=z.x*innerWidth;
+    const zy=z.y*innerHeight;
+    const d=Math.hypot(cx-zx,cy-zy);
+    if(d<z.r){
+      SYSTEM.proximityHits++;
+      if(SYSTEM.proximityHits===1) say("YOU NOTICED",true);
+      if(SYSTEM.proximityHits===3) say("THE SYSTEM NOTICED YOU",true);
+    }
+  });
+}
+
+/* =========================
+   TIME / PHASE ENGINE
 ========================= */
 setInterval(()=>{
-  STATE.time++;
-  updateText();
+  SYSTEM.time++;
 
-  if(STATE.time === 90){
-    text.textContent = "PHASE ONE COMPLETE";
-    text.style.opacity = 1;
+  if(SYSTEM.time===6) say("INITIALIZING");
+  if(SYSTEM.time===15) say("SIGNAL CONFIRMED");
+  if(SYSTEM.time===30 && !SYSTEM.interacted) say("PASSIVE OBSERVER");
+  if(SYSTEM.time===30 && SYSTEM.interacted) say("ACTIVE PRESENCE");
+
+  if(SYSTEM.time===50){
+    SYSTEM.phase=1;
+    say("ENTERING PHASE TWO");
   }
+
+  if(SYSTEM.time===75 && SYSTEM.proximityHits>0){
+    say("YOU ARE SEARCHING");
+  }
+
+  if(SYSTEM.time===100){
+    say("THE SYSTEM IS AWARE",true);
+    document.body.classList.add("glitch");
+  }
+
+  checkZones();
 },1000);
 
 /* =========================
    RESIZE
 ========================= */
 function resize(){
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  grain.width = innerWidth;
-  grain.height = innerHeight;
+  c.width=g.width=innerWidth;
+  c.height=g.height=innerHeight;
 }
 window.addEventListener("resize",resize);
 </script>
