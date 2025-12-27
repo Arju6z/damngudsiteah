@@ -2,149 +2,229 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>About Me</title>
+<title>Galaxy Arcade</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Google Font -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+*{
+  margin:0;padding:0;box-sizing:border-box;
+  font-family:'Orbitron',sans-serif;
 }
 
-body {
-  height: 100vh;
-  background: linear-gradient(270deg, #0f0c29, #302b63, #24243e);
-  background-size: 600% 600%;
-  animation: bgMove 15s ease infinite;
-  color: #fff;
-  overflow: hidden;
+body{
+  overflow:hidden;
+  background:black;
+  color:white;
 }
 
-@keyframes bgMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* 🌌 GALAXY CANVAS */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:-2;
 }
 
-/* Floating particles */
-span {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: rgba(255,255,255,0.6);
-  border-radius: 50%;
-  animation: float 20s linear infinite;
+/* 🌫️ SUBTLE OVERLAY */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at center, transparent 0%, rgba(0,0,0,.6) 70%);
+  z-index:-1;
 }
 
-@keyframes float {
-  from { transform: translateY(100vh); }
-  to { transform: translateY(-10vh); }
+/* 🧭 APP CONTAINER */
+.app{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-.container {
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
+/* 🧊 GLASS PANEL */
+.panel{
+  width:95%;
+  max-width:460px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(18px);
+  border-radius:26px;
+  padding:32px;
+  box-shadow:0 0 60px rgba(0,0,0,.7);
+  animation:panelIn 1.2s ease;
 }
 
-.card {
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 40px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 0 40px rgba(0,0,0,0.5);
-  animation: fadeIn 1.5s ease;
+@keyframes panelIn{
+  from{opacity:0;transform:scale(.85) translateY(40px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
+h1{
+  text-align:center;
+  margin-bottom:10px;
+  letter-spacing:2px;
 }
 
-h1 {
-  font-size: 32px;
-  margin-bottom: 10px;
+.subtitle{
+  text-align:center;
+  opacity:.75;
+  margin-bottom:30px;
 }
 
-p {
-  opacity: 0.85;
-  margin-bottom: 30px;
+/* 🎮 GAME BUTTONS */
+.game-btn{
+  width:100%;
+  padding:16px;
+  margin:10px 0;
+  border:none;
+  border-radius:50px;
+  font-size:15px;
+  cursor:pointer;
+  color:white;
+  background:linear-gradient(135deg,#00c6ff,#0072ff);
+  transition:.35s;
+  position:relative;
+  overflow:hidden;
 }
 
-button {
-  background: linear-gradient(135deg, #ff512f, #dd2476);
-  border: none;
-  padding: 14px 28px;
-  font-size: 16px;
-  color: white;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
+.game-btn::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,.4),transparent);
+  transform:translateX(-100%);
 }
 
-button:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 25px rgba(255,81,47,0.8);
+.game-btn:hover::after{
+  animation:shine .9s;
 }
 
-#text {
-  margin-top: 25px;
-  font-size: 18px;
-  min-height: 24px;
-  animation: fadeIn 0.6s ease;
+@keyframes shine{
+  to{transform:translateX(100%)}
+}
+
+.game-btn:hover{
+  transform:scale(1.08);
+  box-shadow:0 0 30px rgba(0,198,255,.8);
+}
+
+/* 🔄 SCREEN SYSTEM */
+.screen{
+  animation:fadeIn .6s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ⬅ BACK */
+.back{
+  margin-top:25px;
+  background:linear-gradient(135deg,#ff416c,#ff4b2b);
+}
+
+/* ⚠️ FLOATING BADGES */
+.badge{
+  position:absolute;
+  top:20px;
+  right:20px;
+  padding:8px 14px;
+  border-radius:20px;
+  font-size:12px;
+  background:rgba(255,255,255,.15);
+  backdrop-filter:blur(10px);
+  animation:float 3s ease-in-out infinite;
+}
+
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
 }
 </style>
 </head>
 
 <body>
 
-<!-- particles -->
-<script>
-for (let i = 0; i < 60; i++) {
-  let s = document.createElement("span");
-  s.style.left = Math.random() * 100 + "vw";
-  s.style.animationDuration = (10 + Math.random() * 20) + "s";
-  s.style.opacity = Math.random();
-  document.body.appendChild(s);
-}
-</script>
+<canvas id="galaxy"></canvas>
+<div class="overlay"></div>
 
-<div class="container">
-  <div class="card">
-    <h1>Hey 👋</h1>
-    <p>Welcome to my space on the internet</p>
-    <button onclick="next()">Click here</button>
-    <div id="text"></div>
+<div class="badge">STAGE 1</div>
+
+<div class="app">
+  <div class="panel" id="panel">
+
+    <!-- HOME SCREEN -->
+    <div class="screen" id="home">
+      <h1>🌌 Galaxy Arcade</h1>
+      <div class="subtitle">Games floating in space</div>
+
+      <button class="game-btn" onclick="openGame('chess')">♟️ Chess</button>
+      <button class="game-btn" onclick="openGame('ludo')">🎲 Ludo</button>
+      <button class="game-btn" onclick="openGame('carrom')">⚪ Carrom</button>
+      <button class="game-btn" onclick="openGame('arcade')">⚡ Arcade</button>
+    </div>
+
   </div>
 </div>
 
 <script>
-let lines = [
-  "Loading profile...",
-  "Authenticating visitor...",
-  "Still here? 👀",
-  "You really opened this link huh",
-  "Respect.",
-  "That’s it. No secrets.",
-  "But thanks for appreciating the design ✨"
-];
-let i = 0;
+/* 🌌 GALAXY ENGINE */
+const c=document.getElementById("galaxy");
+const ctx=c.getContext("2d");
+resize();
+window.onresize=resize;
 
-function next() {
-  if (i < lines.length) {
-    document.getElementById("text").innerText = lines[i];
-    i++;
-  }
+let stars=[];
+for(let i=0;i<250;i++){
+  stars.push({
+    x:Math.random()*c.width,
+    y:Math.random()*c.height,
+    r:Math.random()*1.5+0.5,
+    s:Math.random()*0.4+0.2
+  });
+}
+
+let mx=0,my=0;
+window.onmousemove=e=>{
+  mx=(e.clientX/window.innerWidth-.5)*10;
+  my=(e.clientY/window.innerHeight-.5)*10;
+};
+
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle="white";
+  stars.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x+mx,s.y+my,s.r,0,Math.PI*2);
+    ctx.fill();
+    s.y+=s.s;
+    if(s.y>c.height){s.y=0;s.x=Math.random()*c.width}
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+
+function resize(){
+  c.width=innerWidth;
+  c.height=innerHeight;
+}
+
+/* 🎮 GAME LOADER */
+function openGame(game){
+  const panel=document.getElementById("panel");
+  panel.innerHTML=`
+    <div class="screen">
+      <h1>${game.toUpperCase()}</h1>
+      <div class="subtitle">Module loading…</div>
+
+      <p style="text-align:center;opacity:.8;margin-top:20px">
+        This game will fully unlock in Stage 2 🚀
+      </p>
+
+      <button class="game-btn back" onclick="location.reload()">⬅ Back</button>
+    </div>
+  `;
 }
 </script>
 
