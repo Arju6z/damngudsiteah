@@ -4,227 +4,170 @@
 <meta charset="UTF-8">
 <title>Galaxy Arcade</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-*{
-  margin:0;padding:0;box-sizing:border-box;
-  font-family:'Orbitron',sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Orbitron',sans-serif}
+body{background:black;color:white;overflow:hidden}
+canvas{position:fixed;inset:0;z-index:-1}
 
-body{
-  overflow:hidden;
-  background:black;
-  color:white;
-}
-
-/* 🌌 GALAXY CANVAS */
-canvas{
-  position:fixed;
-  inset:0;
-  z-index:-2;
-}
-
-/* 🌫️ SUBTLE OVERLAY */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:radial-gradient(circle at center, transparent 0%, rgba(0,0,0,.6) 70%);
-  z-index:-1;
-}
-
-/* 🧭 APP CONTAINER */
-.app{
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-/* 🧊 GLASS PANEL */
+/* UI */
 .panel{
-  width:95%;
-  max-width:460px;
-  background:rgba(255,255,255,0.08);
+  width:95%;max-width:520px;
+  margin:auto;
+  margin-top:5vh;
+  background:rgba(255,255,255,.08);
   backdrop-filter:blur(18px);
-  border-radius:26px;
-  padding:32px;
-  box-shadow:0 0 60px rgba(0,0,0,.7);
-  animation:panelIn 1.2s ease;
+  border-radius:30px;
+  padding:30px;
+  animation:in .8s ease;
 }
+@keyframes in{from{opacity:0;transform:scale(.9)}to{opacity:1}}
 
-@keyframes panelIn{
-  from{opacity:0;transform:scale(.85) translateY(40px)}
-  to{opacity:1;transform:scale(1) translateY(0)}
-}
-
-h1{
-  text-align:center;
-  margin-bottom:10px;
-  letter-spacing:2px;
-}
-
-.subtitle{
-  text-align:center;
-  opacity:.75;
-  margin-bottom:30px;
-}
-
-/* 🎮 GAME BUTTONS */
-.game-btn{
-  width:100%;
-  padding:16px;
-  margin:10px 0;
-  border:none;
-  border-radius:50px;
-  font-size:15px;
-  cursor:pointer;
-  color:white;
+button{
+  width:100%;padding:14px;margin:8px 0;
+  border:none;border-radius:50px;
   background:linear-gradient(135deg,#00c6ff,#0072ff);
-  transition:.35s;
-  position:relative;
-  overflow:hidden;
+  color:white;font-size:15px;
+  cursor:pointer;transition:.3s;
+}
+button:hover{transform:scale(1.07);box-shadow:0 0 25px #00c6ff}
+.back{background:linear-gradient(135deg,#ff416c,#ff4b2b)}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:2px;
+  margin:20px auto;
+  width:280px;
+}
+.cell{
+  width:34px;height:34px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+}
+.white{background:#eee;color:black}
+.black{background:#555}
+
+.token{
+  width:24px;height:24px;border-radius:50%;
+  background:red;position:absolute;
+  transition:.5s;
+}
+.ludo-board{
+  width:260px;height:260px;
+  background:#222;position:relative;margin:auto;
 }
 
-.game-btn::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  background:linear-gradient(120deg,transparent,rgba(255,255,255,.4),transparent);
-  transform:translateX(-100%);
-}
-
-.game-btn:hover::after{
-  animation:shine .9s;
-}
-
-@keyframes shine{
-  to{transform:translateX(100%)}
-}
-
-.game-btn:hover{
-  transform:scale(1.08);
-  box-shadow:0 0 30px rgba(0,198,255,.8);
-}
-
-/* 🔄 SCREEN SYSTEM */
-.screen{
-  animation:fadeIn .6s ease;
-}
-
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(20px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-/* ⬅ BACK */
-.back{
-  margin-top:25px;
-  background:linear-gradient(135deg,#ff416c,#ff4b2b);
-}
-
-/* ⚠️ FLOATING BADGES */
-.badge{
-  position:absolute;
-  top:20px;
-  right:20px;
-  padding:8px 14px;
+.carrom{
+  width:260px;height:260px;
+  background:#2b2b2b;
   border-radius:20px;
-  font-size:12px;
-  background:rgba(255,255,255,.15);
-  backdrop-filter:blur(10px);
-  animation:float 3s ease-in-out infinite;
+  position:relative;
+  margin:auto;
 }
-
-@keyframes float{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-10px)}
+.coin{
+  width:20px;height:20px;border-radius:50%;
+  background:white;
+  position:absolute;
+}
+.striker{
+  width:26px;height:26px;border-radius:50%;
+  background:#ff4444;
+  position:absolute;bottom:10px;left:117px;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="galaxy"></canvas>
-<div class="overlay"></div>
+<canvas id="bg"></canvas>
 
-<div class="badge">STAGE 1</div>
-
-<div class="app">
-  <div class="panel" id="panel">
-
-    <!-- HOME SCREEN -->
-    <div class="screen" id="home">
-      <h1>🌌 Galaxy Arcade</h1>
-      <div class="subtitle">Games floating in space</div>
-
-      <button class="game-btn" onclick="openGame('chess')">♟️ Chess</button>
-      <button class="game-btn" onclick="openGame('ludo')">🎲 Ludo</button>
-      <button class="game-btn" onclick="openGame('carrom')">⚪ Carrom</button>
-      <button class="game-btn" onclick="openGame('arcade')">⚡ Arcade</button>
-    </div>
-
-  </div>
-</div>
+<div class="panel" id="app"></div>
 
 <script>
-/* 🌌 GALAXY ENGINE */
-const c=document.getElementById("galaxy");
-const ctx=c.getContext("2d");
-resize();
-window.onresize=resize;
-
-let stars=[];
-for(let i=0;i<250;i++){
-  stars.push({
-    x:Math.random()*c.width,
-    y:Math.random()*c.height,
-    r:Math.random()*1.5+0.5,
-    s:Math.random()*0.4+0.2
-  });
-}
-
-let mx=0,my=0;
-window.onmousemove=e=>{
-  mx=(e.clientX/window.innerWidth-.5)*10;
-  my=(e.clientY/window.innerHeight-.5)*10;
-};
-
+// 🌌 Background
+const c=document.getElementById("bg"),x=c.getContext("2d");
+resize();window.onresize=resize;
+let stars=[...Array(200)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,s:Math.random()*1.5+0.5}));
 function draw(){
-  ctx.clearRect(0,0,c.width,c.height);
-  ctx.fillStyle="white";
+  x.clearRect(0,0,c.width,c.height);
+  x.fillStyle="white";
   stars.forEach(s=>{
-    ctx.beginPath();
-    ctx.arc(s.x+mx,s.y+my,s.r,0,Math.PI*2);
-    ctx.fill();
-    s.y+=s.s;
-    if(s.y>c.height){s.y=0;s.x=Math.random()*c.width}
+    x.beginPath();x.arc(s.x,s.y,s.s,0,Math.PI*2);x.fill();
+    s.y+=0.3;if(s.y>c.height){s.y=0;s.x=Math.random()*c.width}
   });
   requestAnimationFrame(draw);
 }
 draw();
+function resize(){c.width=innerWidth;c.height=innerHeight}
 
-function resize(){
-  c.width=innerWidth;
-  c.height=innerHeight;
+// 🧭 Router
+const app=document.getElementById("app");
+home();
+
+function home(){
+  app.innerHTML=`
+  <h1 style="text-align:center">🌌 Galaxy Arcade</h1>
+  <p style="text-align:center;opacity:.7;margin-bottom:20px">Stage 2 Games</p>
+  <button onclick="chess()">♟️ Chess</button>
+  <button onclick="ludo()">🎲 Ludo</button>
+  <button onclick="carrom()">⚪ Carrom</button>
+  `;
 }
 
-/* 🎮 GAME LOADER */
-function openGame(game){
-  const panel=document.getElementById("panel");
-  panel.innerHTML=`
-    <div class="screen">
-      <h1>${game.toUpperCase()}</h1>
-      <div class="subtitle">Module loading…</div>
+// ♟️ CHESS (Mini Playable)
+function chess(){
+  const pieces=[
+    "♜","♞","♝","♛","♚","♝","♞","♜",
+    "♟","♟","♟","♟","♟","♟","♟","♟",
+    "","","","","","","","",
+    "","","","","","","","",
+    "","","","","","","","",
+    "","","","","","","","",
+    "♙","♙","♙","♙","♙","♙","♙","♙",
+    "♖","♘","♗","♕","♔","♗","♘","♖"
+  ];
+  app.innerHTML=`<h2 style="text-align:center">♟️ Chess</h2>
+  <div class="grid">${pieces.map((p,i)=>`
+    <div class="cell ${(Math.floor(i/8)+i)%2?'black':'white'}">${p}</div>`).join("")}</div>
+  <button class="back" onclick="home()">⬅ Back</button>`;
+}
 
-      <p style="text-align:center;opacity:.8;margin-top:20px">
-        This game will fully unlock in Stage 2 🚀
-      </p>
-
-      <button class="game-btn back" onclick="location.reload()">⬅ Back</button>
-    </div>
+// 🎲 LUDO (Animated Dice + Token)
+function ludo(){
+  app.innerHTML=`
+  <h2 style="text-align:center">🎲 Ludo</h2>
+  <div class="ludo-board" id="board">
+    <div class="token" id="tok" style="top:10px;left:10px"></div>
+  </div>
+  <button onclick="roll()">🎲 Roll Dice</button>
+  <button class="back" onclick="home()">⬅ Back</button>
   `;
+}
+let pos=0;
+function roll(){
+  const step=Math.floor(Math.random()*6)+1;
+  pos+=step;
+  const t=document.getElementById("tok");
+  t.style.left=(10+(pos*20)%200)+"px";
+  t.style.top=(10+Math.floor(pos/10)*20)+"px";
+}
+
+// ⚪ CARROM (Physics demo)
+function carrom(){
+  app.innerHTML=`
+  <h2 style="text-align:center">⚪ Carrom</h2>
+  <div class="carrom" id="cboard">
+    <div class="coin" style="top:120px;left:120px"></div>
+    <div class="striker" id="str"></div>
+  </div>
+  <p style="text-align:center;opacity:.7">Tap striker</p>
+  <button class="back" onclick="home()">⬅ Back</button>
+  `;
+  const s=document.getElementById("str");
+  s.onclick=()=>s.style.top="20px";
 }
 </script>
 
