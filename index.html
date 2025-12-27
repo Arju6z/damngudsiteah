@@ -8,14 +8,11 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
-body{background:#000;color:#d0d0d0;overflow:hidden;height:100vh}
+body{background:#000;color:#cfcfcf;overflow:hidden;height:100vh}
 
 canvas{position:fixed;inset:0}
+#grain{pointer-events:none;opacity:.07;mix-blend-mode:overlay}
 
-/* Film grain */
-#grain{pointer-events:none;opacity:.06;mix-blend-mode:overlay}
-
-/* Cursor */
 #cursor{
   position:fixed;
   width:14px;height:14px;
@@ -26,31 +23,34 @@ canvas{position:fixed;inset:0}
   transform:translate(-50%,-50%);
 }
 
-/* Text */
 #overlay{
   position:fixed;inset:0;
   display:flex;align-items:center;justify-content:center;
   pointer-events:none;
 }
+
 #text{
   text-align:center;
-  font-size:13px;
-  letter-spacing:.2em;
+  font-size:12px;
+  letter-spacing:.25em;
   text-transform:uppercase;
   opacity:0;
-  transition:opacity 3s ease;
+  transition:opacity 4s ease;
+  max-width:70vw;
 }
 
-/* Glitch */
+.fade{opacity:0}
+.reveal{opacity:1}
+
 .glitch{
-  animation:glitch .25s steps(2,end) infinite;
+  animation:glitch .2s steps(2,end) infinite;
 }
 @keyframes glitch{
-  0%{transform:translate(0,0)}
+  0%{transform:translate(0)}
   25%{transform:translate(-2px,1px)}
   50%{transform:translate(2px,-1px)}
   75%{transform:translate(-1px,2px)}
-  100%{transform:translate(0,0)}
+  100%{transform:translate(0)}
 }
 </style>
 </head>
@@ -60,43 +60,42 @@ canvas{position:fixed;inset:0}
 <canvas id="void"></canvas>
 <canvas id="grain"></canvas>
 <div id="cursor"></div>
-
 <div id="overlay"><div id="text"></div></div>
 
 <script>
 /* =========================
-   SYSTEM STATE
+   DEEP SYSTEM STATE
 ========================= */
-const SYSTEM = {
+const SYS = {
   time: 0,
-  phase: 0,
   interacted: false,
-  proximityHits: 0,
-  memory: sessionStorage.getItem("void_seen") ? true : false
+  hesitation: 0,
+  depthUnlocked: false,
+  missed: false,
+  memory: sessionStorage.getItem("void_depth") || "new"
 };
-sessionStorage.setItem("void_seen", "1");
+sessionStorage.setItem("void_depth","seen");
 
 /* =========================
    VOID ENGINE
 ========================= */
-const c = document.getElementById("void");
-const ctx = c.getContext("2d");
+const c=document.getElementById("void"),x=c.getContext("2d");
 resize();
 
-let stars = Array.from({length:400},()=>({
+let stars=[...Array(500)].map(()=>({
   x:Math.random()*c.width,
   y:Math.random()*c.height,
   z:Math.random(),
-  v:Math.random()*0.25+0.05
+  v:Math.random()*0.2+0.05
 }));
 
 function drawVoid(){
-  ctx.clearRect(0,0,c.width,c.height);
+  x.clearRect(0,0,c.width,c.height);
   stars.forEach(s=>{
     s.y+=s.v*(1+s.z*2);
     if(s.y>c.height){s.y=0;s.x=Math.random()*c.width}
-    ctx.fillStyle=`rgba(255,255,255,${0.15+s.z*0.7})`;
-    ctx.fillRect(s.x,s.y,1+s.z,1+s.z);
+    x.fillStyle=`rgba(255,255,255,${0.1+s.z*0.6})`;
+    x.fillRect(s.x,s.y,1+s.z,1+s.z);
   });
   requestAnimationFrame(drawVoid);
 }
@@ -105,97 +104,98 @@ drawVoid();
 /* =========================
    FILM GRAIN
 ========================= */
-const g = document.getElementById("grain");
-const gctx = g.getContext("2d");
+const g=document.getElementById("grain"),gx=g.getContext("2d");
 resize();
 (function grainLoop(){
-  const img = gctx.createImageData(g.width,g.height);
+  const img=gx.createImageData(g.width,g.height);
   for(let i=0;i<img.data.length;i+=4){
     const v=Math.random()*255;
     img.data[i]=img.data[i+1]=img.data[i+2]=v;
-    img.data[i+3]=18;
+    img.data[i+3]=20;
   }
-  gctx.putImageData(img,0,0);
+  gx.putImageData(img,0,0);
   requestAnimationFrame(grainLoop);
 })();
 
 /* =========================
    CURSOR ENTITY
 ========================= */
-const cursor = document.getElementById("cursor");
-let cx=innerWidth/2, cy=innerHeight/2, tx=cx, ty=cy;
+const cursor=document.getElementById("cursor");
+let cx=innerWidth/2,cy=innerHeight/2,tx=cx,ty=cy;
 
 window.addEventListener("mousemove",e=>{
-  tx=e.clientX; ty=e.clientY;
-  SYSTEM.interacted=true;
+  tx=e.clientX;ty=e.clientY;
+  SYS.interacted=true;
 });
 
-(function moveCursor(){
-  cx+=(tx-cx)*0.06;
-  cy+=(ty-cy)*0.06;
+(function follow(){
+  cx+=(tx-cx)*0.05;
+  cy+=(ty-cy)*0.05;
   cursor.style.left=cx+"px";
   cursor.style.top=cy+"px";
-  requestAnimationFrame(moveCursor);
+  requestAnimationFrame(follow);
 })();
 
 /* =========================
    TEXT ENGINE
 ========================= */
-const text = document.getElementById("text");
-
-function say(msg, glitch=false){
+const text=document.getElementById("text");
+function speak(msg,glitch=false){
   text.textContent=msg;
-  text.style.opacity=1;
-  text.classList.toggle("glitch",glitch);
+  text.className=glitch?"glitch reveal":"reveal";
 }
 
 /* =========================
-   PROXIMITY ZONES
+   DEPTH ZONE (HIDDEN)
 ========================= */
-const zones = [
-  {x:0.25,y:0.3,r:120},
-  {x:0.7,y:0.6,r:140}
-];
+const depthZone={x:0.5,y:0.5,r:90};
 
-function checkZones(){
-  zones.forEach(z=>{
-    const zx=z.x*innerWidth;
-    const zy=z.y*innerHeight;
-    const d=Math.hypot(cx-zx,cy-zy);
-    if(d<z.r){
-      SYSTEM.proximityHits++;
-      if(SYSTEM.proximityHits===1) say("YOU NOTICED",true);
-      if(SYSTEM.proximityHits===3) say("THE SYSTEM NOTICED YOU",true);
-    }
-  });
+function checkDepth(){
+  const zx=depthZone.x*innerWidth;
+  const zy=depthZone.y*innerHeight;
+  const d=Math.hypot(cx-zx,cy-zy);
+
+  if(d<depthZone.r && !SYS.depthUnlocked && SYS.time>120){
+    SYS.depthUnlocked=true;
+    speak("YOU FOUND WHAT WAS NOT OFFERED",true);
+  }
+
+  if(SYS.time>140 && !SYS.depthUnlocked){
+    SYS.missed=true;
+    speak("YOU WERE CLOSE",false);
+  }
 }
 
 /* =========================
-   TIME / PHASE ENGINE
+   TIME ENGINE
 ========================= */
 setInterval(()=>{
-  SYSTEM.time++;
+  SYS.time++;
 
-  if(SYSTEM.time===6) say("INITIALIZING");
-  if(SYSTEM.time===15) say("SIGNAL CONFIRMED");
-  if(SYSTEM.time===30 && !SYSTEM.interacted) say("PASSIVE OBSERVER");
-  if(SYSTEM.time===30 && SYSTEM.interacted) say("ACTIVE PRESENCE");
+  if(SYS.time===10) speak("OBSERVATION CONTINUES");
+  if(SYS.time===30 && !SYS.interacted) speak("STILLNESS NOTED");
+  if(SYS.time===60 && SYS.interacted) speak("MOVEMENT RECORDED");
 
-  if(SYSTEM.time===50){
-    SYSTEM.phase=1;
-    say("ENTERING PHASE TWO");
+  if(SYS.time===90) speak("THIS SYSTEM DOES NOT GUIDE");
+
+  if(SYS.time===120){
+    speak("SOME THINGS REQUIRE PRESENCE");
   }
 
-  if(SYSTEM.time===75 && SYSTEM.proximityHits>0){
-    say("YOU ARE SEARCHING");
+  if(SYS.time===160 && SYS.depthUnlocked){
+    speak("YOU ARE PERSISTENT");
   }
 
-  if(SYSTEM.time===100){
-    say("THE SYSTEM IS AWARE",true);
-    document.body.classList.add("glitch");
+  if(SYS.time===160 && SYS.missed){
+    speak("OPPORTUNITY EXPIRED");
   }
 
-  checkZones();
+  if(SYS.time===200){
+    speak("END OF SESSION");
+    text.style.opacity=1;
+  }
+
+  checkDepth();
 },1000);
 
 /* =========================
