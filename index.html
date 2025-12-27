@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About Me</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  height: 100vh;
+  background: linear-gradient(270deg, #0f0c29, #302b63, #24243e);
+  background-size: 600% 600%;
+  animation: bgMove 15s ease infinite;
+  color: #fff;
+  overflow: hidden;
+}
+
+@keyframes bgMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Floating particles */
+span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 50%;
+  animation: float 20s linear infinite;
+}
+
+@keyframes float {
+  from { transform: translateY(100vh); }
+  to { transform: translateY(-10vh); }
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  animation: fadeIn 1.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+p {
+  opacity: 0.85;
+  margin-bottom: 30px;
+}
+
+button {
+  background: linear-gradient(135deg, #ff512f, #dd2476);
+  border: none;
+  padding: 14px 28px;
+  font-size: 16px;
+  color: white;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 25px rgba(255,81,47,0.8);
+}
+
+#text {
+  margin-top: 25px;
+  font-size: 18px;
+  min-height: 24px;
+  animation: fadeIn 0.6s ease;
+}
+</style>
+</head>
+
+<body>
+
+<!-- particles -->
+<script>
+for (let i = 0; i < 60; i++) {
+  let s = document.createElement("span");
+  s.style.left = Math.random() * 100 + "vw";
+  s.style.animationDuration = (10 + Math.random() * 20) + "s";
+  s.style.opacity = Math.random();
+  document.body.appendChild(s);
+}
+</script>
+
+<div class="container">
+  <div class="card">
+    <h1>Hey 👋</h1>
+    <p>Welcome to my space on the internet</p>
+    <button onclick="next()">Click here</button>
+    <div id="text"></div>
+  </div>
+</div>
+
+<script>
+let lines = [
+  "Loading profile...",
+  "Authenticating visitor...",
+  "Still here? 👀",
+  "You really opened this link huh",
+  "Respect.",
+  "That’s it. No secrets.",
+  "But thanks for appreciating the design ✨"
+];
+let i = 0;
+
+function next() {
+  if (i < lines.length) {
+    document.getElementById("text").innerText = lines[i];
+    i++;
+  }
+}
+</script>
+
+</body>
+</html>
