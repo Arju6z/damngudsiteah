@@ -2,16 +2,58 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SYSTEM // VOID</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SYSTEM // VOID</title>
+
+<meta name="description" content="An interactive system. Minimal. Silent. Observing.">
+<meta name="theme-color" content="#000000">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}
-body{background:#000;color:#cfcfcf;overflow:hidden}
+/* =========================
+   BASE
+========================= */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter,system-ui,sans-serif;
+}
 
-canvas{position:fixed;inset:0}
+body{
+  background:#000;
+  color:#cfcfcf;
+  overflow:hidden;
+  height:100vh;
+}
 
+/* =========================
+   CANVAS
+========================= */
+canvas{
+  position:fixed;
+  inset:0;
+}
+
+/* =========================
+   CURSOR
+========================= */
+#cursor{
+  position:fixed;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#fff;
+  mix-blend-mode:difference;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+}
+
+/* =========================
+   TEXT
+========================= */
 #overlay{
   position:fixed;
   inset:0;
@@ -22,21 +64,13 @@ canvas{position:fixed;inset:0}
 }
 
 #text{
-  font-size:13px;
-  letter-spacing:.25em;
+  font-size:12px;
+  letter-spacing:.28em;
   text-transform:uppercase;
   opacity:0;
-  transition:opacity 3s ease;
-}
-
-#cursor{
-  position:fixed;
-  width:10px;height:10px;
-  background:#fff;
-  border-radius:50%;
-  pointer-events:none;
-  mix-blend-mode:difference;
-  transform:translate(-50%,-50%);
+  transition:opacity 4s ease;
+  text-align:center;
+  max-width:80vw;
 }
 </style>
 </head>
@@ -45,73 +79,91 @@ canvas{position:fixed;inset:0}
 
 <canvas id="void"></canvas>
 <div id="cursor"></div>
-<div id="overlay"><div id="text"></div></div>
+
+<div id="overlay">
+  <div id="text"></div>
+</div>
 
 <script>
-/* ===== SAFE VOID ENGINE ===== */
-const c=document.getElementById("void");
-const ctx=c.getContext("2d");
-resize();
+/* =========================
+   CANVAS ENGINE (SAFE)
+========================= */
+const canvas = document.getElementById("void");
+const ctx = canvas.getContext("2d");
 
-let stars=Array.from({length:200},()=>({
-  x:Math.random()*c.width,
-  y:Math.random()*c.height,
-  s:Math.random()*1.5+0.5,
-  v:Math.random()*0.3+0.1
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize();
+addEventListener("resize", resize);
+
+const stars = Array.from({length:180}, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  s: Math.random() * 1.4 + 0.4,
+  v: Math.random() * 0.25 + 0.05
 }));
 
 function render(){
-  ctx.fillStyle="#000";
-  ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle="#fff";
-  stars.forEach(st=>{
-    st.y+=st.v;
-    if(st.y>c.height){st.y=0;st.x=Math.random()*c.width}
-    ctx.fillRect(st.x,st.y,st.s,st.s);
-  });
+  ctx.fillStyle = "#fff";
+  for(const st of stars){
+    st.y += st.v;
+    if(st.y > canvas.height){
+      st.y = 0;
+      st.x = Math.random() * canvas.width;
+    }
+    ctx.fillRect(st.x, st.y, st.s, st.s);
+  }
 
   requestAnimationFrame(render);
 }
 render();
 
-/* ===== CURSOR ===== */
-const cursor=document.getElementById("cursor");
-let cx=innerWidth/2,cy=innerHeight/2,tx=cx,ty=cy;
-window.addEventListener("mousemove",e=>{
-  tx=e.clientX;ty=e.clientY;
+/* =========================
+   CURSOR MOTION
+========================= */
+const cursor = document.getElementById("cursor");
+let cx = innerWidth/2, cy = innerHeight/2;
+let tx = cx, ty = cy;
+
+addEventListener("mousemove", e=>{
+  tx = e.clientX;
+  ty = e.clientY;
 });
+
 (function follow(){
-  cx+=(tx-cx)*0.1;
-  cy+=(ty-cy)*0.1;
-  cursor.style.left=cx+"px";
-  cursor.style.top=cy+"px";
+  cx += (tx - cx) * 0.08;
+  cy += (ty - cy) * 0.08;
+  cursor.style.left = cx + "px";
+  cursor.style.top = cy + "px";
   requestAnimationFrame(follow);
 })();
 
-/* ===== TEXT SYSTEM ===== */
-const text=document.getElementById("text");
-const lines=[
+/* =========================
+   TEXT SEQUENCE
+========================= */
+const text = document.getElementById("text");
+
+const sequence = [
   "INITIALIZING",
   "SIGNAL CONFIRMED",
   "OBSERVING",
-  "YOU ARE PRESENT",
+  "NO INPUT REQUIRED",
   "SESSION STABLE"
 ];
-let i=0;
-setInterval(()=>{
-  if(i<lines.length){
-    text.textContent=lines[i++];
-    text.style.opacity=1;
-  }
-},6000);
 
-/* ===== RESIZE ===== */
-function resize(){
-  c.width=innerWidth;
-  c.height=innerHeight;
-}
-window.addEventListener("resize",resize);
+let index = 0;
+
+setInterval(()=>{
+  if(index < sequence.length){
+    text.textContent = sequence[index++];
+    text.style.opacity = 1;
+  }
+}, 6500);
 </script>
 
 </body>
