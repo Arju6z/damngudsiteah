@@ -2,177 +2,217 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Session Active</title>
+<title>SYSTEM // VOID</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'JetBrains Mono',monospace}
-body{
-  height:100vh;
-  overflow:hidden;
-  background:black;
-  color:#00ffcc;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter,system-ui,sans-serif;
 }
 
-/* 🌌 Canvas */
+body{
+  background:#000;
+  color:#d8d8d8;
+  overflow:hidden;
+  height:100vh;
+}
+
+/* Canvas layers */
 canvas{
   position:fixed;
   inset:0;
-  z-index:-2;
 }
 
-/* 🌫️ Fog */
-.fog{
+/* Film grain */
+#grain{
+  pointer-events:none;
+  opacity:.05;
+  mix-blend-mode:overlay;
+}
+
+/* Center text container */
+#overlay{
   position:fixed;
   inset:0;
-  background:radial-gradient(circle at 30% 30%, rgba(0,255,204,.08), transparent 60%),
-             radial-gradient(circle at 70% 70%, rgba(255,0,204,.06), transparent 60%);
-  animation:fogMove 20s linear infinite;
-  z-index:-1;
-}
-@keyframes fogMove{
-  0%{transform:translate(0,0)}
-  50%{transform:translate(-40px,30px)}
-  100%{transform:translate(0,0)}
-}
-
-/* 🧠 Terminal Box */
-.terminal{
-  width:90%;
-  max-width:600px;
-  margin:auto;
-  margin-top:15vh;
-  padding:25px;
-  background:rgba(0,0,0,.6);
-  border:1px solid rgba(0,255,204,.3);
-  box-shadow:0 0 40px rgba(0,255,204,.2);
-  animation:fadeIn 1.2s ease;
-}
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(40px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-.line{
-  margin:10px 0;
-  white-space:nowrap;
-  overflow:hidden;
-  border-right:2px solid #00ffcc;
-  animation:typing 2s steps(30,end), blink .8s infinite;
-}
-@keyframes typing{
-  from{width:0}
-  to{width:100%}
-}
-@keyframes blink{
-  50%{border-color:transparent}
-}
-
-/* Buttons */
-.actions{
-  margin-top:25px;
   display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-button{
-  flex:1;
-  padding:12px;
-  background:black;
-  border:1px solid #00ffcc;
-  color:#00ffcc;
-  cursor:pointer;
-  transition:.3s;
-}
-button:hover{
-  background:#00ffcc;
-  color:black;
-  box-shadow:0 0 20px #00ffcc;
-}
-
-/* Popup */
-.popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:flex;
-  justify-content:center;
   align-items:center;
-  animation:fadeIn .4s;
+  justify-content:center;
+  pointer-events:none;
 }
-.popupBox{
-  padding:30px;
-  border:1px solid #ff0066;
-  color:#ff0066;
-  box-shadow:0 0 30px #ff0066;
+
+#text{
+  text-align:center;
+  font-size:14px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  opacity:0;
+  transition:opacity 3s ease;
+}
+
+/* Cursor entity */
+#cursor{
+  position:fixed;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#fff;
+  pointer-events:none;
+  mix-blend-mode:difference;
+  transform:translate(-50%,-50%);
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="stars"></canvas>
-<div class="fog"></div>
+<canvas id="void"></canvas>
+<canvas id="grain"></canvas>
+<div id="cursor"></div>
 
-<div class="terminal" id="term">
-  <div class="line">> Session initialized</div>
-  <div class="line">> Establishing secure connection</div>
-  <div class="line">> Visitor detected</div>
-
-  <div class="actions">
-    <button onclick="scan()">Run Scan</button>
-    <button onclick="analyze()">Analyze</button>
-    <button onclick="glitch()">Glitch</button>
-    <button onclick="clearTerm()">Clear</button>
-  </div>
+<div id="overlay">
+  <div id="text"></div>
 </div>
 
 <script>
-// 🌌 Stars
-const c=document.getElementById("stars"),x=c.getContext("2d");
-resize();window.onresize=resize;
-let stars=[...Array(300)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,s:Math.random()*1.5+0.5}));
-function draw(){
-  x.clearRect(0,0,c.width,c.height);
-  x.fillStyle="white";
-  stars.forEach(s=>{
-    x.fillRect(s.x,s.y,s.s,s.s);
-    s.y+=.4;if(s.y>c.height){s.y=0;s.x=Math.random()*c.width}
+/* =========================
+   GLOBAL STATE
+========================= */
+const STATE = {
+  time: 0,
+  phase: 0,
+  interacted: false
+};
+
+/* =========================
+   VOID CANVAS
+========================= */
+const canvas = document.getElementById("void");
+const ctx = canvas.getContext("2d");
+resize();
+
+let particles = [];
+for(let i=0;i<300;i++){
+  particles.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    z:Math.random(),
+    v:Math.random()*0.2+0.05
   });
-  requestAnimationFrame(draw);
-}
-draw();
-function resize(){c.width=innerWidth;c.height=innerHeight}
-
-// 🧠 Terminal actions
-function addLine(text,color="#00ffcc"){
-  const d=document.createElement("div");
-  d.className="line";
-  d.style.color=color;
-  d.innerText="> "+text;
-  document.getElementById("term").prepend(d);
 }
 
-function scan(){
-  addLine("Scanning environment...");
-  setTimeout(()=>addLine("No threats detected"),1200);
+function drawVoid(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#000";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  particles.forEach(p=>{
+    p.y += p.v * (1 + p.z*2);
+    if(p.y > canvas.height) p.y = 0;
+
+    const alpha = 0.2 + p.z*0.6;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.fillRect(p.x, p.y, 1+p.z, 1+p.z);
+  });
+
+  requestAnimationFrame(drawVoid);
+}
+drawVoid();
+
+/* =========================
+   FILM GRAIN
+========================= */
+const grain = document.getElementById("grain");
+const gctx = grain.getContext("2d");
+resize();
+
+function drawGrain(){
+  const img = gctx.createImageData(grain.width, grain.height);
+  for(let i=0;i<img.data.length;i+=4){
+    const v = Math.random()*255;
+    img.data[i] = v;
+    img.data[i+1] = v;
+    img.data[i+2] = v;
+    img.data[i+3] = 15;
+  }
+  gctx.putImageData(img,0,0);
+  requestAnimationFrame(drawGrain);
+}
+drawGrain();
+
+/* =========================
+   CURSOR ENTITY
+========================= */
+const cursor = document.getElementById("cursor");
+let cx=0, cy=0, tx=0, ty=0;
+
+window.addEventListener("mousemove",e=>{
+  tx=e.clientX;
+  ty=e.clientY;
+  STATE.interacted = true;
+});
+
+function moveCursor(){
+  cx += (tx-cx)*0.08;
+  cy += (ty-cy)*0.08;
+  cursor.style.left = cx+"px";
+  cursor.style.top = cy+"px";
+  requestAnimationFrame(moveCursor);
+}
+moveCursor();
+
+/* =========================
+   TEXT SYSTEM
+========================= */
+const text = document.getElementById("text");
+
+const SCRIPT = [
+  { t: 5,  msg: "INITIALIZING" },
+  { t: 12, msg: "SIGNAL DETECTED" },
+  { t: 20, msg: "OBSERVING" },
+  { t: 35, msg: "YOU ARE NOT REQUIRED TO INTERACT" },
+  { t: 55, msg: "BUT YOU WILL" }
+];
+
+let shown = -1;
+
+function updateText(){
+  STATE.time++;
+  const entry = SCRIPT.find((s,i)=> i>shown && STATE.time >= s.t);
+  if(entry){
+    text.textContent = entry.msg;
+    text.style.opacity = 1;
+    shown++;
+  }
 }
 
-function analyze(){
-  addLine("Analyzing behavior...");
-  setTimeout(()=>addLine("Conclusion: curious human 🤔"),1200);
-}
+/* =========================
+   TIME ENGINE
+========================= */
+setInterval(()=>{
+  STATE.time++;
+  updateText();
 
-function glitch(){
-  document.body.style.filter="hue-rotate(180deg)";
-  setTimeout(()=>document.body.style.filter="",600);
-}
+  if(STATE.time === 90){
+    text.textContent = "PHASE ONE COMPLETE";
+    text.style.opacity = 1;
+  }
+},1000);
 
-function clearTerm(){
-  document.getElementById("term").innerHTML='<div class="line">> Terminal reset</div>';
+/* =========================
+   RESIZE
+========================= */
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  grain.width = innerWidth;
+  grain.height = innerHeight;
 }
+window.addEventListener("resize",resize);
 </script>
 
 </body>
